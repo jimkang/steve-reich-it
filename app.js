@@ -14,7 +14,7 @@ var audioContext;
     [
       getAudio,
       decode,
-      play
+      startLoops
     ],
     handleError
   );
@@ -32,12 +32,28 @@ function decode(buffer, done) {
   }
 }
 
-function play(decodedBuffer, done) {
-  var sourceNode = audioContext.createBufferSource();
-  sourceNode.buffer = decodedBuffer;
-  sourceNode.connect(audioContext.destination);
-  sourceNode.start();  
+function startLoops(decodedBuffer, done) {
+  play(decodedBuffer, -1, 1);
+  play(decodedBuffer, 1, 1.002);
   callNextTick(done);
+}
+
+function play(decodedBuffer, pan = 0, rate = 1) {
+  var sourceNode = audioContext.createBufferSource();
+  var pannerNode = audioContext.createStereoPanner();
+
+  pannerNode.connect(audioContext.destination);
+  sourceNode.connect(pannerNode);
+
+  pannerNode.pan.value = pan;
+
+  sourceNode.buffer = decodedBuffer;
+  sourceNode.loop = true;
+  sourceNode.loopStart = 2.98;
+  sourceNode.loopEnd = 3.80;
+  sourceNode.playbackRate.value = rate;
+
+  sourceNode.start(0, 2.98);
 }
 
 function getAudioBuffer(url, done) {
